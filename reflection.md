@@ -1,6 +1,18 @@
 # PawPal+ Project Reflection
 
 ## 1. System Design
+Three core actions: delivering a daily schedule and why that daily schedule works. Whenever you have free time , it is the best time for a pet's high priority needs. Log the habits and learn from those habits. 
+Object 1 : Pet (attributes): Name, Type of pet,current health status and energy level
+(methods): energyLevelupdate(), setSpecies(input) ,getNeeds()
+
+Object 2 : UserScheduler (attributes) : OwnerName, PetID, BusyTimeBlocks, FreeTimeBlocks, DayPlan, PlanReasoning. 
+(methods): calculateFreeTime() ,generateDailySchedule(taskList) , generateReasoning() 
+
+Object 3 : LoggerBasedHabits(attributes) : CompletedLogs, MissedTasks, UserPatterns 
+(methods): logActivity(task, status) ,analyzeHabits() 
+Object 4 : Task (attributes): TaskID, Name, Priority (High/Med/Low), Duration (Minutes), IsCompleted. 
+(methods): editTask(name, priority, duration) ,markComplete() 
+
 
 **a. Initial design**
 
