@@ -53,6 +53,12 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 #   09:00 — Feeding (10 min) [priority: high]
 #   ...
 ```
+## Sample Output for mian.py 
+Today's Schedule
+================
+- Feed breakfast (10 min) [High]
+- Play session (20 min) [Med]
+- Morning walk (30 min) [High]
 
 ## 🧪 Testing PawPal+
 

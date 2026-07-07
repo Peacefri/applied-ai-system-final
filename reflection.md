@@ -18,6 +18,15 @@ Object 4 : Task (attributes): TaskID, Name, Priority (High/Med/Low), Duration (M
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+Initial UML design used four core classes: Pet, UserScheduler, LoggerBasedHabits, and Task.
+
+Pet holds pet state like name, species, health status, and energy, and provides methods to update energy, set species, and derive care needs.
+
+UserScheduler manages owner scheduling data, including busy/free time blocks, a daily plan, and reasoning logic for generating schedules.
+
+LoggerBasedHabits tracks completed logs, missed tasks, and user patterns, with methods to log activities and analyze habits.
+
+Task represents scheduled actions with id, name, priority, duration, and completion status, plus methods to edit the task and mark it complete
 
 **b. Design changes**
 
