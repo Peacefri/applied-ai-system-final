@@ -78,14 +78,55 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+PawPal+ goes beyond a flat task list with four pieces of scheduling logic. Each
+is implemented in `pawpal_system.py` and named below.
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()`, `Scheduler.generateDailySchedule()` | Chronological order; unscheduled tasks trail, then priority then shortest duration |
+| Filtering | `Scheduler.filterTasks(petName=..., completed=...)` | Compose filters by pet name and/or completion status |
+| Conflict handling | `Scheduler.detectConflicts()`, `Task.overlaps()` | Detects overlapping time windows (not just exact-time clashes) |
+| Recurring tasks | `Task.markComplete()`, `Task.nextOccurrence()`, `Pet.completeTask()` | Completing a daily/weekly task auto-creates the next occurrence |
+
+### Sorting behavior — `Scheduler.sort_by_time()`
+
+Orders tasks chronologically by `startTime` (minutes since midnight). Unscheduled
+("floating") tasks are pushed to the end rather than crashing on a `None`
+comparison, using a tuple sort key `(startTime is None, startTime or 0)`.
+`Scheduler.generateDailySchedule()` builds on the same idea with a richer key:
+timed tasks first, then **priority** (High → Med → Low via `Priority.rank`), then
+**shortest duration** as the final tiebreaker.
+
+### Filtering behavior — `Scheduler.filterTasks()`
+
+Returns tasks across all of the owner's pets, narrowed by two optional, composable
+filters:
+
+- `filterTasks(petName="Biscuit")` — only that pet's tasks
+- `filterTasks(completed=True)` — only completed tasks (`False` for open ones)
+- `filterTasks(petName="Biscuit", completed=False)` — both at once
+- `filterTasks()` — everything
+
+A filter left as `None` is simply not applied.
+
+### Conflict detection — `Scheduler.detectConflicts()`
+
+Returns every pair of scheduled tasks whose time windows overlap, using the
+half-open interval test `a.start < b.end and b.start < a.end` (also exposed as
+`Task.overlaps()`). Tasks are sorted by start time so the inner scan can stop
+early once a later task starts after the current one ends — effectively linear
+when overlaps are rare. Back-to-back tasks (one ends exactly when the next
+begins) correctly do **not** conflict.
+
+### Recurring task logic — `Task.markComplete()` / `Pet.completeTask()`
+
+Tasks carry an optional `recurrence` (`Recurrence.Daily` or `Recurrence.Weekly`)
+and a `dueDate`. When a recurring task is completed, `Task.nextOccurrence()`
+builds a fresh, incomplete copy due `dueDate + recurrence.delta` — `+1 day` for
+daily, `+1 week` for weekly — computed with `datetime.timedelta` so month/year
+rollovers (e.g. Jan 31 → Feb 1) are handled automatically. `Pet.completeTask()`
+ties it together: it marks the task done and auto-appends the next occurrence to
+the pet's task list.
 
 ## 📸 Demo Walkthrough
 
