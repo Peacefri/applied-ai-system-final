@@ -2,6 +2,8 @@
 
 ## Title and Summary
 
+**Base project:** PawPal+ Module 2 starter project (`ai110-module2show-pawpal-starter`).
+
 **PawPal Plus** is a Streamlit pet-care planning app for an owner who needs to
 track pets, care tasks, schedules, completion status, and time conflicts. The
 original app goal was to make everyday pet care easier to organize by creating
@@ -93,17 +95,26 @@ The existing object model is documented in
 These examples assume an owner named Jordan has a pet named Mochi, with a
 completed Walk task and an open Feed dinner task stored in PawPal.
 
-**Input:** `Did I already walk Mochi today?`
+**Example 1: completed-task lookup**
 
-**Example output:** `Yes. I found completed care for Mochi's Walk.`
+```text
+Input: Did I already walk Mochi today?
+Output: Yes. I found completed care for Mochi's Walk.
+```
 
-**Input:** `What's due this afternoon?`
+**Example 2: open-task schedule lookup**
 
-**Example output:** `Open PawPal tasks: Mochi's Feed dinner (18:00).`
+```text
+Input: What's due this afternoon?
+Output: Open PawPal tasks: Mochi's Feed dinner (18:00).
+```
 
-**Input:** `What tasks are on Mochi's schedule?`
+**Example 3: pet-task retrieval**
 
-**Example output:** `I found these related PawPal tasks: Mochi's Walk, Mochi's Feed dinner.`
+```text
+Input: What tasks are on Mochi's schedule?
+Output: I found these related PawPal tasks: Mochi's Walk, Mochi's Feed dinner.
+```
 
 The OpenAI response may use slightly different wording, but it receives the
 retrieved records in its prompt. Without an API key, the deterministic
