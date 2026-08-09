@@ -1,141 +1,162 @@
-# PawPal+ (Module 2 Project)
+# PawPal Plus
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+## Title and Summary
 
-## Scenario
+**PawPal Plus** is a Streamlit pet-care planning app for an owner who needs to
+track pets, care tasks, schedules, completion status, and time conflicts. The
+original app goal was to make everyday pet care easier to organize by creating
+an owner, adding pets, adding tasks, completing tasks, and generating a daily
+schedule. It now also includes a retrieval-augmented Q&A assistant that uses
+the owner's actual PawPal data before answering questions.
 
-A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
+This matters because a generic chatbot could invent whether a pet was walked
+or what is due next. PawPal Plus retrieves the stored records first and tells
+the AI to answer only from that context.
 
-- Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
-- Consider constraints (time available, priority, owner preferences)
-- Produce a daily plan and explain why it chose that plan
+## Main Features
 
-Your job is to design the system first (UML), then implement the logic in Python, then connect it to the Streamlit UI.
+- Create an owner and add pets with species, health status, and energy level.
+- Add one-time, daily, or weekly care tasks with duration, priority, due date,
+  and optional start time.
+- Complete tasks and automatically create the next occurrence for recurring
+  tasks.
+- Generate a daily schedule and detect overlapping scheduled tasks.
+- Ask questions such as `Did I already walk Mochi today?` or
+  `What's due this afternoon?`.
+- Use OpenAI for natural-language answers when `OPENAI_API_KEY` is configured,
+  with a deterministic grounded fallback when it is not.
 
-## What you will build
+## Architecture Overview
 
-Your final app should:
+The system architecture and data flow are shown in
+[diagrams/system_diagram.mmd](diagrams/system_diagram.mmd). The Streamlit UI
+sends an owner's question to `PawPalAssistant`. The retriever ranks the
+owner's real pet and task records, formats them as grounded context, and sends
+that context to the answer generator. A prompt guardrail tells the generator
+not to invent data; if the API is unavailable, a local fallback answers from
+the same retrieved records. Automated tests check retrieval and fallback
+behavior, while a human reviews whether answers are accurate and useful.
 
-- Let a user enter basic owner + pet info
-- Let a user add/edit tasks (duration + priority at minimum)
-- Generate a daily schedule/plan based on constraints and priorities
-- Display the plan clearly (and ideally explain the reasoning)
-- Include tests for the most important scheduling behaviors
+The existing object model is documented in
+[diagrams/uml.mmd](diagrams/uml.mmd).
 
-## Getting started
+## Setup Instructions
 
-### Setup
+1. Clone the repository and open the project folder in VS Code.
+2. Create a virtual environment:
+
+   **Windows PowerShell:**
+
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
+
+   **macOS/Linux:**
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. Install the dependencies:
+
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+
+4. Start the app:
+
+   ```bash
+   streamlit run app.py
+   ```
+
+5. Optional: configure OpenAI-generated answers. The app still runs without a
+   key by using the local grounded fallback.
+
+   **Windows PowerShell:**
+
+   ```powershell
+   $env:OPENAI_API_KEY = "your-api-key"
+   ```
+
+   **macOS/Linux:**
+
+   ```bash
+   export OPENAI_API_KEY="your-api-key"
+   ```
+
+   You can also set `OPENAI_MODEL`; the default is `gpt-4o-mini`.
+
+## Sample Interactions
+
+These examples assume an owner named Jordan has a pet named Mochi, with a
+completed Walk task and an open Feed dinner task stored in PawPal.
+
+**Input:** `Did I already walk Mochi today?`
+
+**Example output:** `Yes. I found completed care for Mochi's Walk.`
+
+**Input:** `What's due this afternoon?`
+
+**Example output:** `Open PawPal tasks: Mochi's Feed dinner (18:00).`
+
+**Input:** `What tasks are on Mochi's schedule?`
+
+**Example output:** `I found these related PawPal tasks: Mochi's Walk, Mochi's Feed dinner.`
+
+The OpenAI response may use slightly different wording, but it receives the
+retrieved records in its prompt. Without an API key, the deterministic
+fallback produces the style of output shown above.
+
+## Design Decisions
+
+- **Structured retrieval instead of a separate document store:** PawPal's
+  source of truth is already the in-memory `Owner`, `Pet`, and `Task` model, so
+  retrieving directly from it avoids stale copies and keeps the demo easy to
+  reproduce.
+- **Keyword ranking instead of embeddings:** The task collection is small and
+  questions are simple. Keyword scoring is transparent and has no model
+  download or vector database requirement. The trade-off is that synonyms and
+  complex language are not retrieved as well as they would be with embeddings.
+- **Optional OpenAI provider plus local fallback:** OpenAI gives more natural
+  answers, but requires a key and network access. The fallback makes the app
+  runnable for grading and demos without external services.
+- **Prompt grounding and logging:** The prompt instructs the generator to use
+  only retrieved context. The assistant logs each question and logs an
+  exception if generation fails before using the fallback. It never prints or
+  logs the API key.
+- **In-memory state:** Streamlit session state keeps the current demo data
+  during a session. This keeps the project small, but data is not persistent
+  across restarts.
+
+## Testing Summary
+
+Run the full test suite with:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+python -m pytest
 ```
 
-### Suggested workflow
+The project currently passes the scheduling tests and the AI tests. The AI
+tests verify that retrieved context contains actual pet/task fields, that a
+custom generator receives that context, and that the no-key fallback gives a
+grounded response. They also simulate a provider failure and verify that the
+assistant logs the failure and returns grounded fallback output. The latest
+run passed **18 out of 18 tests**. The system does not test live OpenAI calls
+because that would require a secret, network access, and a variable external
+service.
 
-1. Read the scenario carefully and identify requirements and edge cases.
-2. Draft a UML diagram (classes, attributes, methods, relationships).
-3. Convert UML into Python class stubs (no logic yet).
-4. Implement scheduling logic in small increments.
-5. Add tests to verify key behaviors.
-6. Connect your logic to the Streamlit UI in `app.py`.
-7. Refine UML so it matches what you actually built.
+The main lesson from testing was that a successful AI answer is not enough:
+the test must also prove which application data was retrieved and supplied to
+the generator.
 
-## 🖥️ Sample Output
+## Project Files
 
-Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
-
-```
-# e.g.:
-# Daily plan for Biscuit (Golden Retriever):
-#   08:00 — Morning walk (30 min) [priority: high]
-#   09:00 — Feeding (10 min) [priority: high]
-#   ...
-```
-## Sample Output for mian.py 
-Today's Schedule
-================
-- Feed breakfast (10 min) [High]
-- Play session (20 min) [Med]
-- Morning walk (30 min) [High]
-
-## 🧪 Testing PawPal+
-
-```bash
-# Run the full test suite:
-pytest
-
-# Run with coverage:
-pytest --cov
-```
-
-Sample test output:
-
-```
-# Paste your pytest output here
-```
-
-## 📐 Smarter Scheduling
-
-PawPal+ goes beyond a flat task list with four pieces of scheduling logic. Each
-is implemented in `pawpal_system.py` and named below.
-
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | `Scheduler.sort_by_time()`, `Scheduler.generateDailySchedule()` | Chronological order; unscheduled tasks trail, then priority then shortest duration |
-| Filtering | `Scheduler.filterTasks(petName=..., completed=...)` | Compose filters by pet name and/or completion status |
-| Conflict handling | `Scheduler.detectConflicts()`, `Task.overlaps()` | Detects overlapping time windows (not just exact-time clashes) |
-| Recurring tasks | `Task.markComplete()`, `Task.nextOccurrence()`, `Pet.completeTask()` | Completing a daily/weekly task auto-creates the next occurrence |
-
-### Sorting behavior — `Scheduler.sort_by_time()`
-
-Orders tasks chronologically by `startTime` (minutes since midnight). Unscheduled
-("floating") tasks are pushed to the end rather than crashing on a `None`
-comparison, using a tuple sort key `(startTime is None, startTime or 0)`.
-`Scheduler.generateDailySchedule()` builds on the same idea with a richer key:
-timed tasks first, then **priority** (High → Med → Low via `Priority.rank`), then
-**shortest duration** as the final tiebreaker.
-
-### Filtering behavior — `Scheduler.filterTasks()`
-
-Returns tasks across all of the owner's pets, narrowed by two optional, composable
-filters:
-
-- `filterTasks(petName="Biscuit")` — only that pet's tasks
-- `filterTasks(completed=True)` — only completed tasks (`False` for open ones)
-- `filterTasks(petName="Biscuit", completed=False)` — both at once
-- `filterTasks()` — everything
-
-A filter left as `None` is simply not applied.
-
-### Conflict detection — `Scheduler.detectConflicts()`
-
-Returns every pair of scheduled tasks whose time windows overlap, using the
-half-open interval test `a.start < b.end and b.start < a.end` (also exposed as
-`Task.overlaps()`). Tasks are sorted by start time so the inner scan can stop
-early once a later task starts after the current one ends — effectively linear
-when overlaps are rare. Back-to-back tasks (one ends exactly when the next
-begins) correctly do **not** conflict.
-
-### Recurring task logic — `Task.markComplete()` / `Pet.completeTask()`
-
-Tasks carry an optional `recurrence` (`Recurrence.Daily` or `Recurrence.Weekly`)
-and a `dueDate`. When a recurring task is completed, `Task.nextOccurrence()`
-builds a fresh, incomplete copy due `dueDate + recurrence.delta` — `+1 day` for
-daily, `+1 week` for weekly — computed with `datetime.timedelta` so month/year
-rollovers (e.g. Jan 31 → Feb 1) are handled automatically. `Pet.completeTask()`
-ties it together: it marks the task done and auto-appends the next occurrence to
-the pet's task list.
-
-## 📸 Demo Walkthrough
-
-Describe your app in numbered steps so a reader can follow along without watching a video:
-
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
-
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+- [app.py](app.py): Streamlit interface, scheduling controls, and Q&A box.
+- [pawpal_system.py](pawpal_system.py): owner, pet, task, and scheduler logic.
+- [pawpal_ai.py](pawpal_ai.py): retrieval, grounded prompt, OpenAI provider,
+  logging, and local fallback.
+- [tests/test_pawpal_system.py](tests/test_pawpal_system.py): scheduling tests.
+- [tests/test_pawpal_ai.py](tests/test_pawpal_ai.py): RAG and fallback tests.
+- [model_card.md](model_card.md): reflection, evaluation, and limitations.

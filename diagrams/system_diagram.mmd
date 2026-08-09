@@ -1,0 +1,34 @@
+flowchart LR
+    Owner[Human owner] -->|types question| UI[Streamlit PawPal+ app]
+    UI -->|question + current owner state| Assistant[PawPal AI assistant]
+
+    subgraph Data[Live PawPal data]
+        OwnerState[Owner]
+        Pets[Pets]
+        Tasks[Care tasks]
+        OwnerState --> Pets --> Tasks
+    end
+
+    Assistant -->|retrieves relevant pet and task records| Retriever[Task retriever]
+    Retriever -->|ranked task context| Prompt[Grounded prompt]
+    Tasks -->|actual task data| Retriever
+    Prompt --> Generator[AI answer generator]
+    Generator -->|answer based only on retrieved context| Guardrail[Grounding guardrail]
+    Guardrail -->|answer + cited pet/task details| UI
+    Guardrail -->|fallback when AI is unavailable or context is missing| Fallback[Deterministic safe response]
+    Fallback --> UI
+
+    subgraph Checks[Quality checks]
+        Tests[Automated pytest tests]
+        Human[Human review of answer and retrieved records]
+    end
+
+    Tests -->|checks retrieval, grounding, and fallback| Assistant
+    Human -->|checks accuracy and usefulness| UI
+
+    classDef human fill:#fff3cd,stroke:#b58105,color:#3d2f00
+    classDef ai fill:#d9edf7,stroke:#31708f,color:#12344d
+    classDef data fill:#e8f5e9,stroke:#388e3c,color:#173b1a
+    class Owner,Human human
+    class Assistant,Retriever,Prompt,Generator,Guardrail,Fallback ai
+    class OwnerState,Pets,Tasks data
