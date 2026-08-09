@@ -160,3 +160,4 @@ the generator.
 - [tests/test_pawpal_system.py](tests/test_pawpal_system.py): scheduling tests.
 - [tests/test_pawpal_ai.py](tests/test_pawpal_ai.py): RAG and fallback tests.
 - [model_card.md](model_card.md): reflection, evaluation, and limitations.
+- [execution_log.md](execution_log.md): reproducible test commands and Streamlit interaction log.
