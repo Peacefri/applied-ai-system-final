@@ -1,0 +1,72 @@
+classDiagram
+    %% PawPal+ class diagram
+
+    class Pet {
+        +String name
+        +String species
+        +String healthStatus
+        +int energyLevel
+        +energyLevelUpdate() void
+        +setSpecies(species: String) void
+        +getNeeds() Task[]
+    }
+
+    class UserScheduler {
+        +String ownerName
+        +Pet pet
+        +TimeBlock[] busyTimeBlocks
+        +TimeBlock[] freeTimeBlocks
+        +Task[] dayPlan
+        +String planReasoning
+        +calculateFreeTime() TimeBlock[]
+        +generateDailySchedule(taskList: Task[]) Task[]
+        +generateReasoning() String
+    }
+
+    class LoggerBasedHabits {
+        +Log[] completedLogs
+        +Task[] missedTasks
+        +Pattern[] userPatterns
+        +logActivity(task: Task, status: String) void
+        +analyzeHabits() Pattern[]
+    }
+
+    class Task {
+        +String taskID
+        +String name
+        +Priority priority
+        +int durationMinutes
+        +bool isCompleted
+        +editTask(name: String, priority: Priority, duration: int) void
+        +markComplete() void
+    }
+
+    UserScheduler --> Pet : schedules care for
+    UserScheduler o-- Task : plans / dayPlan
+    Pet --> Task : getNeeds() produces
+    LoggerBasedHabits --> Task : logs status of
+    UserScheduler --> LoggerBasedHabits : uses patterns to reason
+
+    class TimeBlock {
+        +String startTime
+        +String endTime
+        +String description
+    }
+
+    class Log {
+        +Task task
+        +String status
+        +String timestamp
+    }
+
+    class Pattern {
+        +String description
+        +int frequency
+    }
+
+    class Priority {
+        <<enumeration>>
+        +High
+        +Med
+        +Low
+    }
